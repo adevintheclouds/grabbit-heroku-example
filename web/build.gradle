@@ -1,0 +1,40 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.connorgarvey.gradle:gradle-grails-wrapper:1.0'
+    }
+}
+
+apply plugin: "grails"
+
+grails {
+    version '2.2.0'
+}
+
+task copyDependencies(type: Sync) {
+    from project(':address-lookup').jar
+    into "$projectDir/lib"
+}
+
+['grails-war', 'grails-run-app', 'grails-compile', 'grails-test-app', 'grails-clean'].each { taskName ->
+    tasks.getByName(taskName).dependsOn << copyDependencies
+}
+
+task clean(dependsOn: 'grails-clean')
+task build(dependsOn: ['grails-clean', 'grails-compile'])
+tasks.add(name: 'package', dependsOn: ['grails-clean', 'grails-war'])
+task test(dependsOn: ['grails-clean', 'grails-test-app'])
+
+
+// Heroku calls this task to stage the deployment
+task stage(dependsOn: ['package'], type: Delete) {
+
+    // Remove the lib dir for now as this takes up unecesary slug space on Heroku
+    delete 'lib'
+}
+
+// idea plugin is losing the dependencies for grails projects (as these have been manually setup in IntelliJ)
+// so override the task here so these files are not overwritten...
+task idea(overwrite: true) << {}

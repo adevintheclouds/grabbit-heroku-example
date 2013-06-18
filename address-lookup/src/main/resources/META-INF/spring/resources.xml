@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+        http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- <rabbit> -->
+
+    <bean id="connectionFactory" class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg><value>#{ T(com.adevintheclouds.util.RabbitConnectionFactory).getConnectionFactory()}</value></constructor-arg>
+    </bean>
+
+    <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" reply-timeout="18000"/>
+
+    <rabbit:admin connection-factory="connectionFactory" />
+
+    <rabbit:queue name="Q.address-lookup.findAddress"/>
+
+    <rabbit:direct-exchange name="E.address-lookup.direct">
+        <rabbit:bindings>
+            <rabbit:binding queue="Q.address-lookup.findAddress" key="address-lookup.findAddress"/>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    <!-- </rabbit> -->
+
+    <!-- <inbound> -->
+
+    <int-amqp:inbound-gateway request-channel="address-lookup.findAddress" queue-names="Q.address-lookup.findAddress" connection-factory="connectionFactory" concurrent-consumers="1" error-channel="address-lookup.findAddress.error"/>
+
+    <int:channel id="address-lookup.findAddress"/>
+
+    <bean name="addressLookup" class="com.adevintheclouds.addresslookup.AddressLookup" />
+
+    <int:chain input-channel="address-lookup.findAddress">
+        <int:service-activator method="findAddress" ref="addressLookup"/>
+        <int:object-to-json-transformer />
+    </int:chain>
+
+    <int:channel id="address-lookup.findAddress.error"/>
+    <int:logging-channel-adapter channel="address-lookup.findAddress.error" level="ERROR" />
+
+    <!-- </inbound> -->
+
+</beans>

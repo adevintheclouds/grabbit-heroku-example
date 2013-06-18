@@ -1,0 +1,2 @@
+address_lookup: sh ./gradlew address-lookup:run
+web: sh ./gradlew web:grails-run-app

@@ -1,0 +1,37 @@
+  
+allprojects {
+	apply plugin: 'idea'
+}
+
+idea {
+    pathVariables USER_HOME: file(System.getProperty("user.home"))
+
+    project {
+        jdkName = '1.6'
+        languageLevel = '1.6'
+    }
+}
+
+
+ext {
+    targetCompatibility = '1.6'
+    sourceCompatibility = '1.6'
+}
+
+
+subprojects {
+  	group = 'com.adevintheclouds'
+    version = '1.0'
+
+	repositories {
+        mavenCentral()
+
+        maven {
+            url "http://maven.springframework.org/milestone"
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.6'
+}

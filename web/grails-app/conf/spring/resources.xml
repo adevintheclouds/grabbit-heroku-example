@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
+       xsi:schemaLocation="http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
+	        http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+    <!-- <rabbit> -->
+
+    <bean id="connectionFactory" class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg><value>#{ T(com.adevintheclouds.util.RabbitConnectionFactory).getConnectionFactory()}</value></constructor-arg>
+    </bean>
+
+    <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" reply-timeout="20000"/>
+
+    <rabbit:queue name="Q.address-lookup.findAddress"/>
+
+    <rabbit:direct-exchange name="E.address-lookup.direct">
+        <rabbit:bindings>
+            <rabbit:binding queue="Q.address-lookup.findAddress" key="address-lookup.findAddress"/>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    <!-- </rabbit> -->
+
+    <!-- <outbound> -->
+
+    <int:channel id="address-lookup.findAddress"/>
+    <int:channel id="address-lookup.findAddress.reply.json"/>
+
+    <int:gateway id="addressLookup" service-interface="com.adevintheclouds.addresslookup.IAddressLookup" default-reply-timeout="5000">
+        <int:method name="findAddress" request-channel="address-lookup.findAddress"/>
+    </int:gateway>
+
+    <int-amqp:outbound-gateway request-channel="address-lookup.findAddress" amqp-template="amqpTemplate" exchange-name="E.address-lookup.direct" routing-key="address-lookup.findAddress" reply-channel="address-lookup.findAddress.reply.json"/>
+    <int:json-to-object-transformer input-channel="address-lookup.findAddress.reply.json" type="java.util.List"/>
+
+    <!-- </outbound> -->
+
+</beans>
