@@ -1,13 +1,8 @@
 
 ######################
-# Project name:
+# Grabbit
 
-	Grabbit
-
-######################
-# Description:
-
-	An example, multi node, groovy / grails app with RabbitMQ providing the glue, Heroku the home.
+An example, multi node, groovy / grails app with RabbitMQ providing the glue, Heroku the home.	
 
 ######################
 # Getting Started:
