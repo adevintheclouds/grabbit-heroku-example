@@ -7,7 +7,7 @@ An example, multi node, groovy / grails app with RabbitMQ providing the glue, He
 ######################
 # Getting Started:
 
-! These instructions assume that you are working on MacOS, other OS may vary :)
+*These instructions assume that you are working on MacOS, other OS may vary :)*
 
 Setup environment:
 
